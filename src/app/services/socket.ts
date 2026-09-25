@@ -3,9 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { Observable } from 'rxjs';
 import { Company } from './company';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class SocketService implements OnDestroy {
   private socket: Socket = io('http://localhost:3000');
 
@@ -24,6 +22,13 @@ export class SocketService implements OnDestroy {
   onCompanyDeleted(): Observable<Company> {
     return new Observable((observer) => {
       this.socket.on('companyDeleted', (data: Company) => observer.next(data));
+    });
+  }
+
+  onConnectionChange(): Observable<boolean> {
+    return new Observable((observer) => {
+      this.socket.on('connect', () => observer.next(true));
+      this.socket.on('disconnect', () => observer.next(false));
     });
   }
 
