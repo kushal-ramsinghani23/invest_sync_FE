@@ -1,7 +1,32 @@
 <div class="dashboard">
   <h2>Companies</h2>
 
-  @if (companies.length === 0) {
+  <form (ngSubmit)="onSubmit()">
+    <input type="text" [ngModel]="newCompany().name"
+            (ngModelChange)="updateNewCompany('name', $event)"
+            name="name" placeholder="Company name" required />
+
+    <input type="text" [ngModel]="newCompany().sector"
+            (ngModelChange)="updateNewCompany('sector', $event)"
+            name="sector" placeholder="Sector" />
+
+    <select [ngModel]="newCompany().stage"
+            (ngModelChange)="updateNewCompany('stage', $event)"
+            name="stage">
+      <option value="In Review">In Review</option>
+      <option value="Due Diligence">Due Diligence</option>
+      <option value="Invested">Invested</option>
+      <option value="Passed">Passed</option>
+    </select>
+
+    <input type="number" [ngModel]="newCompany().metric_value"
+            (ngModelChange)="updateNewCompany('metric_value', +$event)"
+            name="metric_value" placeholder="Metric value" />
+
+    <button type="submit">Add Company</button>
+  </form>
+
+  @if (companies().length === 0) {
     <p>No companies yet.</p>
   } @else {
     <table>
@@ -14,7 +39,7 @@
       </tr>
       </thead>
       <tbody>
-        @for (company of companies; track company.id) {
+        @for (company of companies(); track company.id) {
           <tr>
             <td>{{ company.name }}</td>
             <td>{{ company.sector }}</td>
