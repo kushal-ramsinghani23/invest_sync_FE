@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Company {
@@ -17,13 +17,34 @@ export interface Stats {
   byStage: { stage: string; count: number }[];
 }
 
+export interface PaginatedCompanies {
+  data: Company[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export interface CompanyFilters {
+  search?: string;
+  sector?: string;
+  stage?: string;
+  page?: number;
+  limit?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CompanyService {
   private http = inject(HttpClient);
   private baseUrl = 'http://localhost:3000/companies';
 
-  getCompanies(): Observable<Company[]> {
-    return this.http.get<Company[]>(this.baseUrl);
+  getCompanies(filters: CompanyFilters = {}): Observable<PaginatedCompanies> {
+    let params = new HttpParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        params = params.set(key, value.toString());
+      }
+    });
+    return this.http.get<PaginatedCompanies>(this.baseUrl, { params });
   }
 
   createCompany(company: Partial<Company>): Observable<Company> {

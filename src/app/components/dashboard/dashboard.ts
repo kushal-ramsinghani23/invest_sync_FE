@@ -10,6 +10,14 @@ interface Toast {
   message: string;
 }
 
+interface ActivityEntry {
+  id: number;
+  action: string;
+  company_name: string;
+  details: string;
+  created_at: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -25,6 +33,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   stats = signal<Stats | null>(null);
   connected = signal(false);
   toasts = signal<Toast[]>([]);
+  activity = signal<ActivityEntry[]>([]);
   private toastId = 0;
 
   newCompany = signal({ name: '', sector: '', stage: 'In Review', metric_value: 0 });
@@ -32,11 +41,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
   editingId = signal<number | null>(null);
   editForm = signal({ name: '', sector: '', stage: '', metric_value: 0 });
 
+  // filters + pagination
+  searchTerm = signal('');
+  stageFilter = signal('');
+  currentPage = signal(1);
+  totalPages = signal(1);
+  pageSize = 5;
+
   private subs: Subscription[] = [];
 
   ngOnInit(): void {
     this.loadCompanies();
     this.loadStats();
+    this.loadActivity();
 
     this.subs.push(
       this.socketService.onConnectionChange().subscribe((status) => this.connected.set(status)),
@@ -44,7 +61,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subs.push(
       this.socketService.onCompanyCreated().subscribe((company) => {
-        this.companies.update((current) => [company, ...current]);
+        this.loadCompanies();
         this.loadStats();
         this.addToast(`New company added: ${company.name}`);
       }),
@@ -52,7 +69,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subs.push(
       this.socketService.onCompanyUpdated().subscribe((updated) => {
-        this.companies.update((current) => current.map((c) => (c.id === updated.id ? updated : c)));
+        this.loadCompanies();
         this.loadStats();
         this.addToast(`${updated.name} updated`);
       }),
@@ -60,18 +77,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subs.push(
       this.socketService.onCompanyDeleted().subscribe((deleted) => {
-        this.companies.update((current) => current.filter((c) => c.id !== deleted.id));
+        this.loadCompanies();
         this.loadStats();
         this.addToast(`${deleted.name} removed`);
+      }),
+    );
+
+    this.subs.push(
+      this.socketService.onActivityLogged().subscribe((entry) => {
+        this.activity.update((current) => [entry, ...current].slice(0, 20));
       }),
     );
   }
 
   loadCompanies(): void {
-    this.companyService.getCompanies().subscribe({
-      next: (data) => this.companies.set(data),
-      error: (err) => console.error('Failed to load companies', err),
-    });
+    this.companyService
+      .getCompanies({
+        search: this.searchTerm(),
+        stage: this.stageFilter(),
+        page: this.currentPage(),
+        limit: this.pageSize,
+      })
+      .subscribe({
+        next: (res) => {
+          this.companies.set(res.data);
+          this.totalPages.set(res.totalPages);
+        },
+        error: (err) => console.error('Failed to load companies', err),
+      });
   }
 
   loadStats(): void {
@@ -79,6 +112,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
       next: (data) => this.stats.set(data),
       error: (err) => console.error('Failed to load stats', err),
     });
+  }
+
+  loadActivity(): void {
+    fetch('http://localhost:3000/companies/activity')
+      .then((res) => res.json())
+      .then((data) => this.activity.set(data))
+      .catch((err) => console.error('Failed to load activity', err));
+  }
+
+  onSearchChange(value: string): void {
+    this.searchTerm.set(value);
+    this.currentPage.set(1);
+    this.loadCompanies();
+  }
+
+  onStageFilterChange(value: string): void {
+    this.stageFilter.set(value);
+    this.currentPage.set(1);
+    this.loadCompanies();
+  }
+
+  nextPage(): void {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.update((p) => p + 1);
+      this.loadCompanies();
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage() > 1) {
+      this.currentPage.update((p) => p - 1);
+      this.loadCompanies();
+    }
   }
 
   updateNewCompany(field: string, value: string | number): void {

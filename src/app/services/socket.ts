@@ -32,6 +32,12 @@ export class SocketService implements OnDestroy {
     });
   }
 
+  onActivityLogged(): Observable<any> {
+    return new Observable((observer) => {
+      this.socket.on('activityLogged', (data: any) => observer.next(data));
+    });
+  }
+
   ngOnDestroy(): void {
     this.socket.disconnect();
   }
