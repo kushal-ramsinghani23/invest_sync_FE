@@ -1,0 +1,28 @@
+<div class="dashboard">
+  <h2>Companies</h2>
+
+  @if (companies.length === 0) {
+    <p>No companies yet.</p>
+  } @else {
+    <table>
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Sector</th>
+        <th>Stage</th>
+        <th>Metric Value</th>
+      </tr>
+      </thead>
+      <tbody>
+        @for (company of companies; track company.id) {
+          <tr>
+            <td>{{ company.name }}</td>
+            <td>{{ company.sector }}</td>
+            <td>{{ company.stage }}</td>
+            <td>{{ company.metric_value }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
