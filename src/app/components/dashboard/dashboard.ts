@@ -9,7 +9,6 @@ interface Toast {
   id: number;
   message: string;
 }
-
 interface ActivityEntry {
   id: number;
   action: string;
@@ -37,7 +36,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private toastId = 0;
 
   newCompany = signal({ name: '', sector: '', stage: 'In Review', metric_value: 0 });
-
   editingId = signal<number | null>(null);
   editForm = signal({ name: '', sector: '', stage: '', metric_value: 0 });
 
@@ -115,6 +113,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   loadActivity(): void {
+    // reuse http client via companyService's baseUrl pattern — quick direct fetch
     fetch('http://localhost:3000/companies/activity')
       .then((res) => res.json())
       .then((data) => this.activity.set(data))
