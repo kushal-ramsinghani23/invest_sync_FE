@@ -1,167 +1,213 @@
-<div class="max-w-5xl mx-auto p-6">
+<div class="min-h-screen w-full bg-slate-900 text-slate-100 p-6 font-sans border-t-0 mt-0">
+  <div class="max-w-6xl mx-auto space-y-6">
 
-  <!-- Toasts -->
-  <div class="fixed top-4 right-4 z-50 space-y-2">
-    @for (toast of toasts(); track toast.id) {
-      <div class="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg shadow-lg">
-        {{ toast.message }}
+    <!-- Toasts -->
+    <div class="fixed top-5 right-5 z-50 space-y-2 max-w-xs">
+      @for (toast of toasts(); track toast.id) {
+        <div class="bg-slate-800 border border-slate-700 text-slate-100 text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-fade-in">
+          <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+          <span class="font-medium">{{ toast.message }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">InvestSync</h1>
+        <p class="text-xs text-slate-400 mt-1">Portfolio Tracking & Activity Stream</p>
+      </div>
+      <div class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 shadow-inner">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" [class.bg-emerald-400]="connected()" [class.bg-rose-400]="!connected()"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5" [class.bg-emerald-500]="connected()" [class.bg-rose-500]="!connected()"></span>
+        </span>
+        <span [class.text-emerald-400]="connected()" [class.text-rose-400]="!connected()">
+          {{ connected() ? 'Live System' : 'Disconnected' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    @if (stats()) {
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl backdrop-blur-md">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Companies</p>
+          <p class="text-3xl font-extrabold text-slate-100 mt-2">{{ stats()!.totalCompanies }}</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl backdrop-blur-md">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Portfolio Value</p>
+          <p class="text-3xl font-extrabold text-emerald-400 mt-2">${{ stats()!.totalValue | number:'1.0-0' }}</p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl backdrop-blur-md">
+          <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Stage Breakdown</p>
+          <div class="flex flex-wrap gap-1.5 text-xs">
+            @for (s of stats()!.byStage; track s.stage) {
+              <span class="px-2 py-1 rounded-md bg-slate-900/80 border border-slate-700 text-slate-300">
+                <strong class="text-blue-400">{{ s.stage }}:</strong> {{ s.count }}
+              </span>
+            }
+          </div>
+        </div>
       </div>
     }
-  </div>
 
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">InvestSync</h1>
-    <div class="flex items-center gap-2 text-sm">
-      <span class="w-2.5 h-2.5 rounded-full" [class.bg-green-500]="connected()" [class.bg-red-500]="!connected()"></span>
-      {{ connected() ? 'Live' : 'Disconnected' }}
-    </div>
-  </div>
+    <!-- Controls & Add Form -->
+    <div class="space-y-4">
+      <!-- Search + filter -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <input type="text" placeholder="Search companies..."
+                  [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
+                  class="w-full bg-slate-800/80 border border-slate-700 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" />
+        </div>
 
-  <!-- Stat cards -->
-  @if (stats()) {
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-white shadow-sm rounded-lg p-4">
-        <p class="text-sm text-gray-500">Total Companies</p>
-        <p class="text-2xl font-bold">{{ stats()!.totalCompanies }}</p>
+        <select [ngModel]="stageFilter()" (ngModelChange)="onStageFilterChange($event)"
+                class="bg-slate-800/80 border border-slate-700 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
+          <option value="">All Stages</option>
+          <option value="In Review">In Review</option>
+          <option value="Due Diligence">Due Diligence</option>
+          <option value="Invested">Invested</option>
+          <option value="Passed">Passed</option>
+        </select>
       </div>
-      <div class="bg-white shadow-sm rounded-lg p-4">
-        <p class="text-sm text-gray-500">Total Portfolio Value</p>
-        <p class="text-2xl font-bold">{{ stats()!.totalValue | number:'1.0-0' }}</p>
-      </div>
-      <div class="bg-white shadow-sm rounded-lg p-4">
-        <p class="text-sm text-gray-500">By Stage</p>
-        <p class="text-sm">
-          @for (s of stats()!.byStage; track s.stage) {
-            <span class="mr-2">{{ s.stage }}: {{ s.count }}</span>
-          }
-        </p>
-      </div>
+
+      <!-- Add company form -->
+      <form (ngSubmit)="onSubmit()" class="flex flex-wrap items-center gap-3 bg-slate-800/40 border border-slate-700/60 p-4 rounded-2xl">
+        <input type="text" [ngModel]="newCompany().name"
+                (ngModelChange)="updateNewCompany('name', $event)"
+                name="name" placeholder="Company name *" required
+                class="bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm rounded-xl px-3 py-2 flex-1 min-w-[160px] focus:outline-none focus:border-blue-500" />
+
+        <input type="text" [ngModel]="newCompany().sector"
+                (ngModelChange)="updateNewCompany('sector', $event)"
+                name="sector" placeholder="Sector"
+                class="bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm rounded-xl px-3 py-2 flex-1 min-w-[130px] focus:outline-none focus:border-blue-500" />
+
+        <select [ngModel]="newCompany().stage"
+                (ngModelChange)="updateNewCompany('stage', $event)"
+                name="stage" class="bg-slate-900/80 border border-slate-700 text-slate-100 text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500">
+          <option value="In Review">In Review</option>
+          <option value="Due Diligence">Due Diligence</option>
+          <option value="Invested">Invested</option>
+          <option value="Passed">Passed</option>
+        </select>
+
+        <input type="number" [ngModel]="newCompany().metric_value"
+                (ngModelChange)="updateNewCompany('metric_value', +$event)"
+                name="metric_value" placeholder="Metric value"
+                class="bg-slate-900/80 border border-slate-700 text-slate-100 placeholder-slate-500 text-sm rounded-xl px-3 py-2 w-32 focus:outline-none focus:border-blue-500" />
+
+        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm px-5 py-2 rounded-xl transition-all shadow-md shadow-blue-500/10 active:scale-95 shrink-0">
+          + Add Company
+        </button>
+      </form>
     </div>
-  }
 
-  <!-- Search + filter -->
-  <div class="flex gap-2 mb-4">
-    <input type="text" placeholder="Search by name..."
-           [ngModel]="searchTerm()" (ngModelChange)="onSearchChange($event)"
-           class="border rounded px-3 py-2 flex-1" />
-
-    <select [ngModel]="stageFilter()" (ngModelChange)="onStageFilterChange($event)"
-            class="border rounded px-3 py-2">
-      <option value="">All Stages</option>
-      <option value="In Review">In Review</option>
-      <option value="Due Diligence">Due Diligence</option>
-      <option value="Invested">Invested</option>
-      <option value="Passed">Passed</option>
-    </select>
-  </div>
-
-  <!-- Add company form -->
-  <form (ngSubmit)="onSubmit()" class="flex flex-wrap gap-2 mb-6 bg-gray-50 p-4 rounded-lg">
-    <input type="text" [ngModel]="newCompany().name"
-           (ngModelChange)="updateNewCompany('name', $event)"
-           name="name" placeholder="Company name" required
-           class="border rounded px-3 py-2 flex-1 min-w-[150px]" />
-
-    <input type="text" [ngModel]="newCompany().sector"
-           (ngModelChange)="updateNewCompany('sector', $event)"
-           name="sector" placeholder="Sector"
-           class="border rounded px-3 py-2 flex-1 min-w-[120px]" />
-
-    <select [ngModel]="newCompany().stage"
-            (ngModelChange)="updateNewCompany('stage', $event)"
-            name="stage" class="border rounded px-3 py-2">
-      <option value="In Review">In Review</option>
-      <option value="Due Diligence">Due Diligence</option>
-      <option value="Invested">Invested</option>
-      <option value="Passed">Passed</option>
-    </select>
-
-    <input type="number" [ngModel]="newCompany().metric_value"
-           (ngModelChange)="updateNewCompany('metric_value', +$event)"
-           name="metric_value" placeholder="Metric value"
-           class="border rounded px-3 py-2 w-32" />
-
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-      Add Company
-    </button>
-  </form>
-
-  <!-- Table -->
-  @if (companies().length === 0) {
-    <p class="text-gray-500">No companies found.</p>
-  } @else {
-    <table class="w-full border-collapse bg-white shadow-sm rounded-lg overflow-hidden">
-      <thead>
-      <tr class="bg-gray-100 text-left text-sm text-gray-600">
-        <th class="p-3">Name</th>
-        <th class="p-3">Sector</th>
-        <th class="p-3">Stage</th>
-        <th class="p-3">Metric Value</th>
-        <th class="p-3">Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-        @for (company of companies(); track company.id) {
-          @if (editingId() === company.id) {
-            <tr class="border-t bg-blue-50">
-              <td class="p-2"><input [ngModel]="editForm().name" (ngModelChange)="updateEditForm('name', $event)" class="border rounded px-2 py-1 w-full" /></td>
-              <td class="p-2"><input [ngModel]="editForm().sector" (ngModelChange)="updateEditForm('sector', $event)" class="border rounded px-2 py-1 w-full" /></td>
-              <td class="p-2">
-                <select [ngModel]="editForm().stage" (ngModelChange)="updateEditForm('stage', $event)" class="border rounded px-2 py-1">
-                  <option value="In Review">In Review</option>
-                  <option value="Due Diligence">Due Diligence</option>
-                  <option value="Invested">Invested</option>
-                  <option value="Passed">Passed</option>
-                </select>
-              </td>
-              <td class="p-2"><input type="number" [ngModel]="editForm().metric_value" (ngModelChange)="updateEditForm('metric_value', +$event)" class="border rounded px-2 py-1 w-24" /></td>
-              <td class="p-2 space-x-2">
-                <button (click)="saveEdit(company.id)" class="text-green-600 hover:underline text-sm">Save</button>
-                <button (click)="cancelEdit()" class="text-gray-500 hover:underline text-sm">Cancel</button>
-              </td>
-            </tr>
-          } @else {
-            <tr class="border-t hover:bg-gray-50">
-              <td class="p-3">{{ company.name }}</td>
-              <td class="p-3">{{ company.sector }}</td>
-              <td class="p-3">
-                <span class="px-2 py-1 text-xs rounded-full {{ stageColor(company.stage) }}">{{ company.stage }}</span>
-              </td>
-              <td class="p-3">{{ company.metric_value | number }}</td>
-              <td class="p-3 space-x-2 text-sm">
-                <button (click)="startEdit(company)" class="text-blue-600 hover:underline">Edit</button>
-                <button (click)="removeCompany(company.id, company.name)" class="text-red-600 hover:underline">Delete</button>
-              </td>
-            </tr>
-          }
-        }
-      </tbody>
-    </table>
-
-    <div class="flex items-center justify-between mt-4 text-sm">
-      <button (click)="prevPage()" [disabled]="currentPage() === 1"
-              class="px-3 py-1 border rounded disabled:opacity-40">Previous</button>
-      <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
-      <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
-              class="px-3 py-1 border rounded disabled:opacity-40">Next</button>
-    </div>
-  }
-
-  <!-- Activity feed -->
-  <div class="mt-8 bg-white shadow-sm rounded-lg p-4">
-    <h3 class="font-semibold mb-3">Recent Activity</h3>
-    @if (activity().length === 0) {
-      <p class="text-gray-500 text-sm">No activity yet.</p>
+    <!-- Table Container -->
+    @if (companies().length === 0) {
+      <div class="text-center py-12 bg-slate-800/30 rounded-2xl border border-slate-800">
+        <p class="text-slate-400 text-sm">No companies matching your criteria.</p>
+      </div>
     } @else {
-      <ul class="space-y-2 text-sm">
-        @for (entry of activity(); track entry.id) {
-          <li class="border-b pb-2">
-            <span class="font-medium">{{ entry.action }}</span> — {{ entry.company_name }}
-            <span class="text-gray-500"> · {{ entry.details }}</span>
-          </li>
-        }
-      </ul>
+      <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-200">
+            <thead class="bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/60">
+            <tr>
+              <th class="p-4 font-semibold">Name</th>
+              <th class="p-4 font-semibold">Sector</th>
+              <th class="p-4 font-semibold">Stage</th>
+              <th class="p-4 font-semibold">Metric Value</th>
+              <th class="p-4 font-semibold text-right">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/40">
+              @for (company of companies(); track company.id) {
+                @if (editingId() === company.id) {
+                  <!-- Edit Row -->
+                  <tr class="bg-blue-950/40">
+                    <td class="p-3"><input [ngModel]="editForm().name" (ngModelChange)="updateEditForm('name', $event)" class="bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm w-full focus:outline-none focus:border-blue-400" /></td>
+                    <td class="p-3"><input [ngModel]="editForm().sector" (ngModelChange)="updateEditForm('sector', $event)" class="bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm w-full focus:outline-none focus:border-blue-400" /></td>
+                    <td class="p-3">
+                      <select [ngModel]="editForm().stage" (ngModelChange)="updateEditForm('stage', $event)" class="bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-blue-400">
+                        <option value="In Review">In Review</option>
+                        <option value="Due Diligence">Due Diligence</option>
+                        <option value="Invested">Invested</option>
+                        <option value="Passed">Passed</option>
+                      </select>
+                    </td>
+                    <td class="p-3"><input type="number" [ngModel]="editForm().metric_value" (ngModelChange)="updateEditForm('metric_value', +$event)" class="bg-slate-900 border border-slate-600 rounded-lg px-2.5 py-1.5 text-sm w-28 focus:outline-none focus:border-blue-400" /></td>
+                    <td class="p-3 text-right space-x-3">
+                      <button (click)="saveEdit(company.id)" class="text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors">Save</button>
+                      <button (click)="cancelEdit()" class="text-slate-400 hover:text-slate-300 text-sm transition-colors">Cancel</button>
+                    </td>
+                  </tr>
+                } @else {
+                  <!-- Standard Row -->
+                  <tr class="hover:bg-slate-700/30 transition-colors">
+                    <td class="p-4 font-semibold text-white">{{ company.name }}</td>
+                    <td class="p-4 text-slate-400">{{ company.sector }}</td>
+                    <td class="p-4">
+                      <span class="px-2.5 py-1 text-xs font-semibold rounded-full border border-slate-700/50 {{ stageColor(company.stage) }}">
+                        {{ company.stage }}
+                      </span>
+                    </td>
+                    <td class="p-4 font-mono font-medium text-slate-200">{{ company.metric_value | number }}</td>
+                    <td class="p-4 text-right space-x-3">
+                      <button (click)="startEdit(company)" class="text-blue-400 hover:text-blue-300 font-medium text-xs transition-colors">Edit</button>
+                      <button (click)="removeCompany(company.id, company.name)" class="text-rose-400 hover:text-rose-300 font-medium text-xs transition-colors">Delete</button>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between p-4 border-t border-slate-700/50 bg-slate-900/40 text-xs text-slate-400">
+          <button (click)="prevPage()" [disabled]="currentPage() === 1"
+                  class="px-3.5 py-1.5 border border-slate-700 rounded-xl hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all">
+            Previous
+          </button>
+          <span>Page <strong class="text-slate-200">{{ currentPage() }}</strong> of <strong class="text-slate-200">{{ totalPages() }}</strong></span>
+          <button (click)="nextPage()" [disabled]="currentPage() === totalPages()"
+                  class="px-3.5 py-1.5 border border-slate-700 rounded-xl hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent transition-all">
+            Next
+          </button>
+        </div>
+      </div>
     }
+
+    <!-- Activity feed -->
+    <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl backdrop-blur-md">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+        Recent Activity
+      </h3>
+
+      @if (activity().length === 0) {
+        <p class="text-slate-500 text-sm">No activity recorded yet.</p>
+      } @else {
+        <ul class="divide-y divide-slate-700/40 text-sm">
+          @for (entry of activity(); track entry.id) {
+            <li class="py-3 first:pt-0 last:pb-0 flex items-center justify-between">
+              <div>
+                <span class="font-semibold text-slate-200">{{ entry.action }}</span>
+                <span class="text-blue-400 font-medium"> — {{ entry.company_name }}</span>
+                <span class="text-slate-400 text-xs block sm:inline sm:ml-2"> · {{ entry.details }}</span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
   </div>
 </div>
